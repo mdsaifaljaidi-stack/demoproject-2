@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Matrix Academy – Multi‑Task Institute | 3D & Modern Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{
+  background:#04081a; color:#f8f8ff; font-family:'Rajdhani',sans-serif;
+  overflow-x:hidden;
+}
+:root{
+  --navy:#04081a; --navy2:#070f2b; --navy3:#0d1b4b; --blue:#1a3a7c;
+  --gold:#f5c842; --gold2:#e8a800; --gold3:#fff0a0; --cyan:#00d4ff;
+  --white:#f8f8ff; --glass:rgba(13,27,75,0.45); --glass2:rgba(245,200,66,0.08);
+  --font-head:'Cinzel',serif; --font-tech:'Orbitron',monospace; --font-body:'Rajdhani',sans-serif;
+}
+canvas#bg-canvas{ position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+.content{ position:relative; z-index:10; background:rgba(4,8,26,0.55); backdrop-filter:blur(3px); }
+
+/* navigation */
+nav{ position:fixed; top:0; left:0; right:0; z-index:1000; display:flex; align-items:center; justify-content:space-between; padding:18px 60px; background:rgba(4,8,26,0.7); backdrop-filter:blur(20px); border-bottom:1px solid rgba(245,200,66,0.15); transition:all .4s; }
+nav.scrolled{ padding:12px 60px; background:rgba(4,8,26,0.95); box-shadow:0 4px 40px rgba(245,200,66,0.1); }
+.nav-logo{ display:flex; align-items:center; gap:12px; text-decoration:none; }
+.logo-icon{ width:42px; height:42px; background:linear-gradient(135deg,var(--gold),var(--gold2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--font-tech); font-size:16px; font-weight:900; color:var(--navy); box-shadow:0 0 20px rgba(245,200,66,0.4); }
+.logo-text{ font-family:var(--font-head); font-size:20px; font-weight:700; background:linear-gradient(90deg,var(--gold),#fff8dc); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:2px; }
+.nav-links{ display:flex; gap:32px; list-style:none; flex-wrap:wrap; }
+.nav-links a{ font-family:var(--font-body); font-size:14px; font-weight:600; color:rgba(248,248,255,.75); text-decoration:none; letter-spacing:1.5px; text-transform:uppercase; position:relative; transition:color .3s; }
+.nav-links a::after{ content:''; position:absolute; bottom:-4px; left:0; width:0; height:2px; background:var(--gold); border-radius:2px; transition:width .3s; }
+.nav-links a:hover{ color:var(--gold); }
+.nav-links a:hover::after{ width:100%; }
+.nav-cta{ background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); font-family:var(--font-body); font-weight:700; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; padding:10px 24px; border-radius:6px; border:none; cursor:pointer; box-shadow:0 0 20px rgba(245,200,66,0.3); transition:all .3s; text-decoration:none; }
+.nav-cta:hover{ box-shadow:0 0 35px rgba(245,200,66,0.6); transform:translateY(-2px); }
+.hamburger{ display:none; flex-direction:column; gap:5px; cursor:pointer; }
+.hamburger span{ width:25px; height:2px; background:var(--gold); border-radius:2px; transition:.3s; }
+@media (max-width:900px){
+  nav{ padding:16px 24px; }
+  .nav-links{ display:none; position:absolute; top:70px; left:0; width:100%; background:rgba(4,8,26,0.95); flex-direction:column; align-items:center; padding:20px 0; gap:15px; backdrop-filter:blur(20px); border-bottom:1px solid var(--gold); }
+  .nav-links.show{ display:flex; }
+  .hamburger{ display:flex; }
+}
+
+/* reveal animation */
+.reveal{ opacity:0; transform:translateY(40px); transition:opacity .8s ease,transform .8s ease; }
+.reveal.visible{ opacity:1; transform:translateY(0); }
+
+/* hero & misc */
+.hero-badge{ display:inline-flex; align-items:center; gap:8px; background:rgba(245,200,66,0.1); border:1px solid rgba(245,200,66,0.3); border-radius:50px; padding:8px 20px; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:28px; backdrop-filter:blur(10px); }
+.hero-title{ font-family:var(--font-head); font-size:clamp(42px,8vw,110px); font-weight:900; line-height:1; letter-spacing:6px; background:linear-gradient(135deg,var(--white) 0%,var(--gold) 50%,var(--white) 100%); -webkit-background-clip:text; background-clip:text; color:transparent; background-size:200% auto; animation:shimmer 4s linear infinite; }
+@keyframes shimmer{ to{ background-position:200% center; } }
+.hero-sub{ font-family:var(--font-tech); font-size:clamp(11px,2vw,16px); letter-spacing:8px; text-transform:uppercase; color:var(--gold2); margin:16px 0 12px; }
+.btn-primary{ background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); font-weight:700; font-size:15px; letter-spacing:2px; text-transform:uppercase; padding:16px 42px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 0 30px rgba(245,200,66,0.35); transition:all .3s; text-decoration:none; display:inline-block; position:relative; overflow:hidden; }
+.btn-primary::before{ content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent); transition:.6s; }
+.btn-primary:hover::before{ left:100%; }
+.btn-primary:hover{ box-shadow:0 0 50px rgba(245,200,66,.6); transform:translateY(-3px); }
+.btn-outline{ background:transparent; border:2px solid rgba(245,200,66,.5); color:var(--gold); font-weight:600; font-size:15px; letter-spacing:2px; text-transform:uppercase; padding:16px 42px; border-radius:8px; cursor:pointer; transition:all .3s; text-decoration:none; display:inline-block; backdrop-filter:blur(10px); }
+.btn-outline:hover{ background:rgba(245,200,66,.1); border-color:var(--gold); transform:translateY(-3px); }
+.section-label{ font-family:var(--font-tech); font-size:11px; letter-spacing:4px; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+.section-title{ font-family:var(--font-head); font-size:clamp(28px,5vw,52px); font-weight:700; line-height:1.15; background:linear-gradient(135deg,var(--white),var(--gold3)); -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:18px; }
+.divider{ width:60px; height:3px; background:linear-gradient(90deg,var(--gold),transparent); border-radius:2px; margin:20px 0 10px; }
+
+/* stats */
+.stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; max-width:1100px; margin:0 auto; text-align:center; }
+.stat-num{ font-family:var(--font-tech); font-size:clamp(36px,5vw,62px); font-weight:900; background:linear-gradient(135deg,var(--gold),var(--gold3)); -webkit-background-clip:text; background-clip:text; color:transparent; display:block; line-height:1.1; }
+.stat-label{ font-size:13px; letter-spacing:2px; text-transform:uppercase; color:rgba(248,248,255,.5); margin-top:8px; }
+
+/* admin card */
+.admin-card{ display:grid; grid-template-columns:320px 1fr; gap:50px; align-items:center; background:linear-gradient(145deg,rgba(13,27,75,.85),rgba(7,15,43,.9)); border:1px solid rgba(245,200,66,.22); border-radius:28px; padding:48px; backdrop-filter:blur(16px); margin:0 auto; max-width:1300px; }
+.admin-photo{ width:240px; height:240px; border-radius:50%; background:linear-gradient(145deg,var(--blue),var(--navy3)); border:4px solid rgba(245,200,66,.45); display:flex; align-items:center; justify-content:center; margin:0 auto; font-size:90px; color:var(--gold); }
+.admin-name{ font-family:var(--font-head); font-size:clamp(26px,3.5vw,42px); font-weight:900; background:linear-gradient(135deg,var(--white),var(--gold3)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.admin-quote{ font-size:16px; color:rgba(248,248,255,.7); line-height:1.9; font-style:italic; border-left:3px solid var(--gold2); padding-left:20px; margin:20px 0; }
+.adm-ach{ display:flex; align-items:center; gap:12px; padding:10px 18px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid rgba(245,200,66,.12); font-size:14px; margin:8px 0; }
+
+/* services flip cards */
+.services-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:28px; max-width:1200px; margin:0 auto; }
+.flip-card{ height:300px; perspective:1200px; cursor:pointer; }
+.flip-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .7s cubic-bezier(.4,0,.2,1); }
+.flip-card:hover .flip-inner{ transform:rotateY(180deg); }
+.flip-front,.flip-back{ position:absolute; inset:0; border-radius:16px; backface-visibility:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px 28px; text-align:center; }
+.flip-front{ background:linear-gradient(145deg,rgba(13,27,75,.9),rgba(7,15,43,.9)); border:1px solid rgba(245,200,66,.2); backdrop-filter:blur(12px); }
+.flip-back{ background:linear-gradient(145deg,var(--blue),var(--navy3)); border:1px solid rgba(245,200,66,.5); transform:rotateY(180deg); }
+.card-icon{ width:70px; height:70px; border-radius:18px; background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(245,200,66,.05)); border:1px solid rgba(245,200,66,.3); display:flex; align-items:center; justify-content:center; font-size:30px; margin-bottom:20px; }
+
+/* gallery */
+.gallery-tabs{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:30px 0 20px; }
+.g-tab{ padding:10px 22px; border-radius:30px; background:rgba(13,27,75,.5); border:1px solid rgba(245,200,66,.15); color:#ccc; font-weight:600; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:.3s; }
+.g-tab.active,.g-tab:hover{ background:linear-gradient(135deg,var(--gold),var(--gold2)); color:var(--navy); border-color:var(--gold); }
+.gallery-panel-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; max-width:1100px; margin:0 auto; }
+.added-photo-card{ position:relative; border-radius:12px; overflow:hidden; cursor:pointer; aspect-ratio:4/3; border:1px solid rgba(245,200,66,.2); transition:.4s; display:flex; align-items:center; justify-content:center; background:#0f1a2f; flex-direction:column; }
+.added-photo-card img{ width:100%; height:100%; object-fit:cover; }
+.add-more-btn{ display:inline-flex; align-items:center; gap:10px; background:rgba(245,200,66,.05); border:2px dashed rgba(245,200,66,.5); color:var(--gold); padding:12px 28px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; margin:20px auto 0; }
+/* sub branch modal */
+#subbranch-modal{ position:fixed; inset:0; z-index:9990; background:rgba(4,8,26,.98); backdrop-filter:blur(20px); display:none; overflow-y:auto; }
+#subbranch-modal.open{ display:block; }
+.sb-modal-inner{ max-width:1200px; margin:0 auto; padding:90px 40px 60px; }
+.sb-close{ position:fixed; top:24px; right:28px; width:48px; height:48px; border-radius:50%; background:rgba(245,200,66,.1); border:1px solid rgba(245,200,66,.3); color:var(--gold); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.sb-close:hover{ background:var(--gold); color:var(--navy); }
+.sb-tabs{ display:flex; gap:0; border-bottom:2px solid rgba(245,200,66,.15); margin-bottom:50px; flex-wrap:wrap; }
+.sb-tab{ padding:14px 26px; font-weight:600; font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(248,248,255,.5); cursor:pointer; border-bottom:3px solid transparent; transition:.3s; }
+.sb-tab.active{ color:var(--gold); border-bottom-color:var(--gold); }
+.sb-panel{ display:none; }
+.sb-panel.active{ display:block; }
+.sb-faculty-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:22px; }
+.sb-faculty-card{ background:rgba(13,27,75,.8); border:1px solid rgba(245,200,66,.12); border-radius:16px; padding:24px; text-align:center; }
+.sb-faculty-photo{ width:86px; height:86px; border-radius:50%; margin:0 auto 14px; background:var(--blue); border:3px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:44px; }
+.sb-courses-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; }
+.sb-course-item{ padding:22px; background:rgba(13,27,75,.5); border:1px solid rgba(245,200,66,.1); border-radius:14px; }
+@media (max-width:900px){ .admin-card{ grid-template-columns:1fr; text-align:center; } .stats-grid{ grid-template-columns:repeat(2,1fr); } .sb-modal-inner{ padding:80px 20px 40px; } }
+footer{ background:rgba(4,8,26,.98); border-top:1px solid rgba(245,200,66,.12); padding:50px 5% 30px; text-align:center; }
+.social-links{ display:flex; gap:12px; justify-content:center; margin-top:20px; }
+.social-btn{ width:38px; height:38px; border-radius:10px; background:rgba(245,200,66,.08); border:1px solid rgba(245,200,66,.2); display:flex; align-items:center; justify-content:center; font-size:16px; transition:.3s; text-decoration:none; color:var(--white); }
+.social-btn:hover{ background:var(--gold); color:var(--navy); transform:translateY(-3px); }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav id="navbar">
+  <a href="#" class="nav-logo"><div class="logo-icon">M</div><span class="logo-text">MATRIX</span></a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li><li><a href="#about">About</a></li><li><a href="#admin">Admin</a></li>
+    <li><a href="#courses">Courses</a></li><li><a href="#gallery">Gallery</a></li><li><a href="#admission">Admission</a></li>
+    <li><a href="#location">Location</a></li><li><a href="javascript:void(0)" onclick="openBranch()" style="color:var(--gold);">🏢 Sub Branch</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#admission" class="nav-cta">Enroll Now</a>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+
+<section id="hero" style="min-height:100vh; padding:120px 40px; text-align:center;">
+  <div class="hero-badge"><span></span> Admissions Open 2025</div>
+  <p class="hero-sub">Welcome to</p>
+  <h1 class="hero-title">MATRIX<br>ACADEMY</h1>
+  <p class="hero-tagline" style="max-width:700px; margin:20px auto;">Computer Courses · Spoken English · Open Board Admission · Higher Education · Coding Bootcamp</p>
+  <div class="hero-buttons" style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:24px;">
+    <a href="#admission" class="btn-primary">Start Your Journey</a>
+    <a href="#courses" class="btn-outline">Explore Courses</a>
+  </div>
+</section>
+
+<section id="stats" style="padding:70px 60px;"><div class="stats-grid">
+  <div class="stat-item reveal"><span class="stat-num" data-target="5200">0</span><div class="stat-label">Students Enrolled</div></div>
+  <div class="stat-item reveal"><span class="stat-num" data-target="32">0</span><div class="stat-label">Courses</div></div>
+  <div class="stat-item reveal"><span class="stat-num" data-target="12">0</span><div class="stat-label">Years Legacy</div></div>
+  <div class="stat-item reveal"><span class="stat-num" data-target="98">0</span><div class="stat-label">Placement %</div></div>
+</div></section>
+
+<!-- SERVICES (Flip Cards with Learn More -> Contact) -->
+<section id="services" style="padding:80px 5%;"><div class="services-header reveal text-center"><p class="section-label">What We Offer</p><h2 class="section-title">Comprehensive Programs<br>Under One Roof</h2><div class="divider" style="margin:0 auto 16px;"></div></div>
+<div class="services-grid">
+  <div class="flip-card reveal"><div class="flip-inner"><div class="flip-front"><div class="card-icon">💻</div><div class="card-title">Computer Courses</div></div><div class="flip-back"><p>MS Office, Programming, Web Design, Hardware & Networking.</p><a href="#contact" class="btn-primary" style="padding:8px 20px; font-size:12px; margin-top:15px;">Learn More →</a></div></div></div>
+  <div class="flip-card reveal"><div class="flip-inner"><div class="flip-front"><div class="card-icon">🗣️</div><div class="card-title">Spoken English</div></div><div class="flip-back"><p>Fluency, grammar, GD, interview prep.</p><a href="#contact" class="btn-primary" style="padding:8px 20px; font-size:12px;">Learn More →</a></div></div></div>
+  <div class="flip-card reveal"><div class="flip-inner"><div class="flip-front"><div class="card-icon">📋</div><div class="card-title">Open Board Admission</div></div><div class="flip-back"><p>Flexible 10th/12th exams, complete support.</p><a href="#contact" class="btn-primary" style="padding:8px 20px;">Learn More →</a></div></div></div>
+  <div class="flip-card reveal"><div class="flip-inner"><div class="flip-front"><div class="card-icon">🎓</div><div class="card-title">Higher Education</div></div><div class="flip-back"><p>UG/PG degrees with recognized universities.</p><a href="#contact" class="btn-primary" style="padding:8px 20px;">Learn More →</a></div></div></div>
+  <div class="flip-card reveal"><div class="flip-inner"><div class="flip-front"><div class="card-icon">⌨️</div><div class="card-title">Typing & Tally</div></div><div class="flip-back"><p>Hindi/English typing, Tally ERP, GST.</p><a href="#contact" class="btn-primary" style="padding:8px 20px;">Learn More →</a></div></div></div>
+  <div class="flip-card reveal"><div class="flip-inner"><div class="flip-front"><div class="card-icon">🚀</div><div class="card-title">Coding Bootcamp</div></div><div class="flip-back"><p>Full Stack, Python, live projects.</p><a href="#contact" class="btn-primary" style="padding:8px 20px;">Learn More →</a></div></div></div>
+</div></section>
+
+<!-- ADMIN SECTION (separate with photo & details) -->
+<section id="admin" style="padding:80px 5%;"><div class="admin-wrap reveal" style="max-width:1300px; margin:0 auto;">
+  <div class="admin-header text-center"><p class="section-label">Leadership</p><h2 class="section-title">Institute Director</h2><div class="divider" style="margin:0 auto 14px;"></div></div>
+  <div class="admin-card">
+    <div class="admin-photo-col"><div class="admin-photo"><i class="fas fa-user-tie"></i></div><div class="admin-badge-row" style="display:flex; justify-content:center; gap:8px; margin-top:16px;"><span class="admin-badge">🎓 Ph.D.</span><span class="admin-badge">🏅 National Award</span></div></div>
+    <div class="admin-info"><div class="admin-name">Dr. [Your Name]</div><div class="admin-title">CEO · Chief Educator · Matrix Academy</div><div class="admin-quote">"Empowerment through education — every student has the potential to shine. At Matrix, we provide the right guidance and opportunities."</div>
+      <div class="admin-achievements"><div class="adm-ach"><i class="fa fa-trophy"></i> National Best Education Leader Award 2023</div><div class="adm-ach"><i class="fa fa-graduation-cap"></i> Ph.D. in Educational Technology · Delhi University</div><div class="adm-ach"><i class="fa fa-briefcase"></i> Former Director at Prestigious Institute</div><div class="adm-ach"><i class="fa fa-users"></i> Mentored 5000+ students & 200+ teachers</div></div>
+      <div class="admin-cta-row" style="display:flex; gap:16px; flex-wrap:wrap;"><a href="#contact" class="btn-primary" style="padding:12px 28px;">Contact Director</a><a href="tel:+919876543210" class="btn-outline">Call Now</a></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- GALLERY SECTION with ADD MORE per category -->
+<section id="gallery" style="padding:80px 5%;"><div class="reveal"><p class="section-label">Moments</p><h2 class="section-title">Campus & Events Gallery</h2><div class="divider" style="margin:0 auto 16px;"></div></div>
+<div class="gallery-tabs"><button class="g-tab active" onclick="switchGalTab('campus',this)">🏫 Campus</button><button class="g-tab" onclick="switchGalTab('lab',this)">🖥️ Lab</button><button class="g-tab" onclick="switchGalTab('events',this)">🎉 Events</button><button class="g-tab" onclick="switchGalTab('awards',this)">🏆 Awards</button></div>
+<div class="gallery-tab-panel active" id="gal-campus"><div class="gallery-panel-grid" id="grid-campus"><div class="added-photo-card" onclick="openLightbox('🏫','Main Building','Modern infrastructure')"><i class="fas fa-building" style="font-size:42px;"></i><div>Main Campus</div></div></div><div class="add-more-btn" onclick="addPhotos('campus')"><i class="fa fa-plus"></i> Add More Photos</div><input type="file" accept="image/*" multiple id="file-campus" style="display:none" onchange="handlePhotos(event,'campus')"></div>
+<div class="gallery-tab-panel" id="gal-lab"><div class="gallery-panel-grid" id="grid-lab"><div class="added-photo-card"><i class="fas fa-laptop-code"></i><div>Computer Lab</div></div></div><div class="add-more-btn" onclick="addPhotos('lab')">Add Lab Photos</div><input type="file" accept="image/*" multiple id="file-lab" style="display:none" onchange="handlePhotos(event,'lab')"></div>
+<div class="gallery-tab-panel" id="gal-events"><div class="gallery-panel-grid" id="grid-events"><div class="added-photo-card"><i class="fas fa-chalkboard-user"></i><div>Annual Fest</div></div></div><div class="add-more-btn" onclick="addPhotos('events')">Add Event Photos</div><input type="file" accept="image/*" multiple id="file-events"></div>
+<div class="gallery-tab-panel" id="gal-awards"><div class="gallery-panel-grid" id="grid-awards"><div class="added-photo-card"><i class="fas fa-medal"></i><div>National Award</div></div></div><div class="add-more-btn" onclick="addPhotos('awards')">Add Award Photos</div><input type="file" accept="image/*" multiple id="file-awards"></div>
+</section>
+
+<!-- SUB BRANCH MODAL (full details) -->
+<div id="subbranch-modal"><button class="sb-close" onclick="closeBranch()"><i class="fa fa-times"></i></button>
+<div class="sb-modal-inner"><div class="sb-hero"><p style="color:var(--gold);">🏢 Sub Branch</p><h2>Matrix Academy — Rohini Campus</h2><p>Sector 14, Rohini, New Delhi</p></div>
+<div class="sb-tabs"><div class="sb-tab active" onclick="switchSbTab('sb-overview',this)">Overview</div><div class="sb-tab" onclick="switchSbTab('sb-courses',this)">Courses</div><div class="sb-tab" onclick="switchSbTab('sb-faculty',this)">Faculty</div><div class="sb-tab" onclick="switchSbTab('sb-map',this)">Location</div></div>
+<div class="sb-panel active" id="sb-overview"><p><strong>Address:</strong> Plot 14, Sector-14, Rohini, Delhi-110085<br><strong>Contact:</strong> +91 98765 11111<br><strong>Branch Head:</strong> Mr. Ajay Sharma (M.Sc CS, 12 yrs)</p><a href="#contact" class="btn-primary" onclick="closeBranch()">Enquire Now</a></div>
+<div class="sb-panel" id="sb-courses"><div class="sb-courses-grid"><div class="sb-course-item">DCA · 6 Months</div><div class="sb-course-item">Spoken English · 60 Days</div><div class="sb-course-item">Open Board (10th/12th)</div><div class="sb-course-item">Tally ERP + GST</div></div></div>
+<div class="sb-panel" id="sb-faculty"><div class="sb-faculty-grid"><div class="sb-faculty-card"><div class="sb-faculty-photo"><i class="fas fa-chalkboard-user"></i></div><div class="sb-fac-name">Mr. Ajay Sharma</div><div>Branch Head</div></div><div class="sb-faculty-card"><div class="sb-faculty-photo"><i class="fas fa-user-graduate"></i></div><div class="sb-fac-name">Ms. Priya Verma</div><div>Spoken English</div></div></div></div>
+<div class="sb-panel" id="sb-map"><iframe width="100%" height="300" style="border-radius:16px;" src="https://maps.google.com/maps?q=Rohini%20Sector%2014%20Delhi&t=&z=13&ie=UTF8&iwloc=&output=embed" allowfullscreen></iframe></div>
+</div></div>
+
+<section id="contact" style="padding:80px 5%; background:rgba(26,58,124,.1);"><div class="contact-wrap" style="max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:60px;"><div><p class="section-label">Get In Touch</p><h2 class="section-title">Connect With Us</h2><div class="divider"></div><p><i class="fa fa-map-marker-alt"></i> Matrix Academy, Main Road, Your City – 000001<br><i class="fa fa-phone"></i> +91 98765 43210<br><i class="fa fa-envelope"></i> info@matrixacademy.in</p></div><div><h3>Quick Contact</h3><input type="text" placeholder="Name" style="width:100%; margin:10px 0; padding:12px;"><input type="email" placeholder="Email" style="width:100%; margin:10px 0; padding:12px;"><textarea placeholder="Message" rows="4" style="width:100%; padding:12px;"></textarea><button class="btn-primary" onclick="alert('Submitted ✅')">Send →</button></div></div></section>
+
+<footer><div class="logo-text" style="font-size:24px;">MATRIX ACADEMY</div><p>All Computer Courses · Spoken English · Open Board · Higher Education</p><div class="social-links"><a class="social-btn" href="#"><i class="fab fa-facebook-f"></i></a><a class="social-btn" href="#"><i class="fab fa-instagram"></i></a><a class="social-btn" href="#"><i class="fab fa-youtube"></i></a></div><p>© 2025 Matrix Academy</p></footer>
+
+<script>
+// Fixed Reveal Observer
+const revealElements = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+revealElements.forEach(el => revealObserver.observe(el));
+
+// Counter animation
+const counters = document.querySelectorAll('.stat-num');
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      let target = parseInt(entry.target.dataset.target);
+      let current = 0;
+      let step = target / 50;
+      let interval = setInterval(() => {
+        current += step;
+        if(current >= target){
+          entry.target.innerText = target;
+          clearInterval(interval);
+        } else entry.target.innerText = Math.floor(current);
+      }, 25);
+      counterObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+counters.forEach(c => counterObserver.observe(c));
+
+// Nav scroll & hamburger
+window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60));
+document.getElementById('hamburger')?.addEventListener('click', () => document.querySelector('.nav-links').classList.toggle('show'));
+
+// Gallery functions
+function switchGalTab(id, btn){
+  document.querySelectorAll('.gallery-tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.g-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('gal-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function addPhotos(cat){ document.getElementById('file-'+cat).click(); }
+function handlePhotos(e, cat){
+  let files = Array.from(e.target.files);
+  let grid = document.getElementById('grid-'+cat);
+  if(!grid) return;
+  files.forEach(f => {
+    let url = URL.createObjectURL(f);
+    let card = document.createElement('div');
+    card.className = 'added-photo-card';
+    card.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;"><button class="del-photo" onclick="event.stopPropagation();this.parentElement.remove()" style="position:absolute; top:8px; right:8px; background:#dc2626; color:white; border:none; border-radius:50%; width:28px; height:28px;">✕</button>`;
+    card.onclick = () => alert('Photo: '+f.name);
+    grid.appendChild(card);
+  });
+  e.target.value = '';
+}
+function openLightbox(icon, title, sub){ alert(title + "\n" + sub); }
+function openBranch(){ document.getElementById('subbranch-modal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeBranch(){ document.getElementById('subbranch-modal').classList.remove('open'); document.body.style.overflow=''; }
+function switchSbTab(id, btn){
+  document.querySelectorAll('.sb-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Three.js Background (simple stars)
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  if(!canvas) return;
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 30;
+  const starGeo = new THREE.BufferGeometry();
+  const count = 1500;
+  const positions = new Float32Array(count * 3);
+  for(let i=0; i<count*3; i+=3){
+    positions[i] = (Math.random() - 0.5) * 200;
+    positions[i+1] = (Math.random() - 0.5) * 100;
+    positions[i+2] = (Math.random() - 0.5) * 80 - 30;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xf5c842, size: 0.2, transparent: true, opacity: 0.6 });
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+  const torus = new THREE.Mesh(new THREE.TorusGeometry(12, 0.08, 16, 100), new THREE.MeshBasicMaterial({ color: 0xf5c842, transparent: true, opacity: 0.1 }));
+  scene.add(torus);
+  function animate(){
+    requestAnimationFrame(animate);
+    torus.rotation.x += 0.003;
+    torus.rotation.y += 0.005;
+    stars.rotation.y += 0.0005;
+    renderer.render(scene, camera);
+  }
+  animate();
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+})();
+</script>
+</body>
+</html>
